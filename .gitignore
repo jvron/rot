@@ -1,0 +1,20 @@
+# Build files
+build/
+out/
+
+build.py
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake-build-*/
+
+# Compilation database
+compile_commands.json
+
+# Editor
+.vscode/
+
+# OS
+*.swp
+.DS_Store
