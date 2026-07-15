@@ -4,6 +4,7 @@ add_executable(
     main.cpp
     lexer/lexer.cpp
     parser/parser.cpp
+    util/file.cpp
 )
 
 target_include_directories(
