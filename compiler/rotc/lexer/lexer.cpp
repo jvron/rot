@@ -9,12 +9,16 @@ bool Lexer::is_end() {
     return current_idx >= source.length();
 }
 
+bool Lexer::is_digit(char value) {
+    return value >= '0' && value <= '9';
+}
+
 char Lexer::advance() {
     char c = source[current_idx];
     current_idx++;
 
     return c;
-} 
+}
 
 char Lexer::peek() {
     if (is_end()) {
@@ -22,6 +26,14 @@ char Lexer::peek() {
     }
 
     return source[current_idx];
+}
+
+char Lexer::peek_next() {
+    if (current_idx + 1 >= source.length()) {
+        return '\0';
+    }
+
+    return source[current_idx + 1];
 }
 
 bool Lexer::match(char expected) {
@@ -48,12 +60,32 @@ bool Lexer::scan_string() {
     }
 
     if (is_end()) {
-        return false;
+        return false; // unterminated string
     }
 
     current_idx++; // consume trailing '"' 
 
     add_token(TokenType::String);
+    return true;
+}
+
+bool Lexer::scan_number() {
+    
+    while (is_digit(peek()) && !is_end()) {
+        current_idx++;
+    }
+
+    if (peek() == '.' && is_digit(peek_next())) {
+        current_idx++; // consume '.'
+
+        while (is_digit(peek())) {
+            current_idx++;
+        }
+        add_token(TokenType::Float);
+        return true;
+    }
+
+    add_token(TokenType::Integer);
     return true;
 }
 
@@ -123,8 +155,13 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
                 break;
 
             default:
-                std::string msg = "At line " + std::to_string(line) + ": Unexpected character.";
-                return Result<std::vector<Token>>::failure(Error(msg));
+                if (is_digit(c)) {
+                    scan_number();
+                }
+                else {
+                    std::string msg = "At line " + std::to_string(line) + ": Unexpected character.";
+                    return Result<std::vector<Token>>::failure(Error(msg));
+                }
         }
     }
 

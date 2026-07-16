@@ -18,10 +18,14 @@ private:
     int line {1};
 
     bool is_end();
+    bool is_digit(char value);
+
     char advance(); // get and consume the current character 
     char peek(); // get the next character without consuming 
+    char peek_next(); 
     bool match(char expected); // check the next character and consume if it is equal to expected 
     bool scan_string();
+    bool scan_number();
     void add_token(TokenType type);
 
 public:
