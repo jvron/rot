@@ -118,7 +118,7 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
                 add_token(match('=') ? TokenType::BangEqual : TokenType::Bang);
                 break;
             case '=':
-                add_token(match('=') ? TokenType::EqualEqual : TokenType::Eqaul);
+                add_token(match('=') ? TokenType::EqualEqual : TokenType::Equal);
                 break;
             case '<':
                 add_token(match('=') ? TokenType::LessEqual : TokenType::Less);

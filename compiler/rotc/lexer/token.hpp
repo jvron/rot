@@ -8,13 +8,13 @@ enum class TokenType {
     Comma, Dot, Minus, Plus, SemiColon, Slash, Star,  
 
     // one - two characters
-    Eqaul, EqualEqual, 
+    Equal, EqualEqual, 
     Bang, BangEqual, 
     Greater, GreaterEqual,
     Less, LessEqual,
 
     // literal 
-    Indentifier, String, Integer, Float, Character, 
+    Identifier, String, Integer, Float, Character, 
 
     // keywords
     If, Else, 
