@@ -63,12 +63,13 @@ bool Lexer::match(char expected) {
     if (is_end()) {
         return false;
     }
+
     if(source[current_idx] != expected) {
         return false;
     }
 
     advance();
-    return false;
+    return true;
 }
 
 bool Lexer::scan_string() {
