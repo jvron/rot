@@ -26,7 +26,7 @@ enum class TokenType {
     True, False,
     Null, 
     Return, 
-    Function,
+    Fn,
     Let,  
 
     Eof 
