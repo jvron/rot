@@ -19,8 +19,9 @@ private:
 
     bool is_end();
     bool is_digit(char value);
+    bool is_alpha(char value);
 
-    char advance(); // get and consume the current character 
+    void advance(); // get and consume the current character 
     char peek(); // get the next character without consuming 
     char peek_next(); 
     bool match(char expected); // check the next character and consume if it is equal to expected 

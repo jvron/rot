@@ -13,11 +13,8 @@ bool Lexer::is_digit(char value) {
     return value >= '0' && value <= '9';
 }
 
-char Lexer::advance() {
-    char c = source[current_idx];
+void Lexer::advance() {
     current_idx++;
-
-    return c;
 }
 
 char Lexer::peek() {
@@ -44,7 +41,7 @@ bool Lexer::match(char expected) {
     if(source[current_idx] !=  expected) {
         return false;
     }
-    current_idx++;
+    advance();
 
     return false;
 }
@@ -56,14 +53,14 @@ bool Lexer::scan_string() {
         if (peek() == '\n') {
             line++;
         }
-        current_idx++;
+        advance();
     }
 
     if (is_end()) {
         return false; // unterminated string
     }
 
-    current_idx++; // consume trailing '"' 
+    advance(); // consume trailing '"' 
 
     add_token(TokenType::String);
     return true;
@@ -72,14 +69,14 @@ bool Lexer::scan_string() {
 bool Lexer::scan_number() {
     
     while (is_digit(peek()) && !is_end()) {
-        current_idx++;
+        advance();
     }
 
     if (peek() == '.' && is_digit(peek_next())) {
-        current_idx++; // consume '.'
+        advance(); // consume '.'
 
         while (is_digit(peek())) {
-            current_idx++;
+            advance();
         }
         add_token(TokenType::Float);
         return true;
@@ -102,7 +99,8 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
 
         start_idx = current_idx;
 
-        char c = advance();
+        char c = peek();
+        advance();
 
         switch (c) {
             case '(': add_token(TokenType::LeftBrace); break;
