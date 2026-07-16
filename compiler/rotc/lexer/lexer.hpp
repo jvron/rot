@@ -20,6 +20,7 @@ private:
     bool is_end();
     bool is_digit(char value);
     bool is_alpha(char value);
+    bool is_alphanumeric(char value);
 
     void advance(); // get and consume the current character 
     char peek(); // get the next character without consuming 
@@ -27,6 +28,7 @@ private:
     bool match(char expected); // check the next character and consume if it is equal to expected 
     bool scan_string();
     bool scan_number();
+    void scan_identifier();
     void add_token(TokenType type);
 
 public:

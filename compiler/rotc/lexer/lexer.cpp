@@ -1,9 +1,23 @@
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "lexer.hpp"
 #include "core/result.hpp"
 #include "lexer/token.hpp"
+
+static const std::unordered_map<std::string, TokenType> keywords = {
+    {"if", TokenType::If},
+    {"else", TokenType::Else},
+    {"while", TokenType::While},
+    {"for", TokenType::For},
+    {"true", TokenType::True},
+    {"false", TokenType::False},
+    {"null", TokenType::Null},
+    {"return", TokenType::Return},
+    {"function", TokenType::Function},
+    {"let", TokenType::Let},
+};
 
 bool Lexer::is_end() {
     return current_idx >= source.length();
@@ -11,6 +25,16 @@ bool Lexer::is_end() {
 
 bool Lexer::is_digit(char value) {
     return value >= '0' && value <= '9';
+}
+
+bool Lexer::is_alpha(char value) {
+    return  (value >= 'a' && value <= 'z') ||
+            (value >= 'A' && value <= 'Z' ) ||
+            value == '_';
+}
+
+bool Lexer::is_alphanumeric(char value) {
+    return is_alpha(value) || is_digit(value);
 }
 
 void Lexer::advance() {
@@ -86,6 +110,24 @@ bool Lexer::scan_number() {
     return true;
 }
 
+void Lexer::scan_identifier() {
+    while (!is_end() && is_alphanumeric(peek())) {
+        advance();
+    }
+    std::string text = source.substr(start_idx, current_idx - start_idx);
+
+    auto it = keywords.find(text);
+
+    if (it != keywords.end()) {
+        TokenType type = it->second;
+        add_token(type);
+    }
+    else {
+        add_token(TokenType::Identifier);
+    }
+    
+}
+
 void Lexer::add_token(TokenType type) {
     
     std::string lexeme = source.substr(start_idx, current_idx - start_idx);
@@ -150,11 +192,14 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
             case ' ':
             case '\r':
             case '\t':
-                break;
-
+                break; 
+                
             default:
                 if (is_digit(c)) {
                     scan_number();
+                }
+                else if (is_alpha(c)) {
+                    scan_identifier();
                 }
                 else {
                     std::string msg = "At line " + std::to_string(line) + ": Unexpected character.";
