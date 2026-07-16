@@ -3,28 +3,31 @@
 #include <string>
 
 enum class TokenType {
-    // single character
-    LeftParen, RightParen, LeftBrace, RightBrace,
-    Comma, Dot, Minus, Plus, SemiColon, Slash, Star,  
+    
+    // punctuation
+    LeftParen, RightParen,
+    LeftBrace, RightBrace,
+    Comma, Dot, SemiColon,
 
-    // one - two characters
+    // operators 
+    Plus, Minus, Star, Slash,
     Equal, EqualEqual, 
     Bang, BangEqual, 
     Greater, GreaterEqual,
     Less, LessEqual,
+    LogicalAnd, LogicalOr,
 
-    // literal 
+    // literals 
     Identifier, String, Integer, Float, Character, 
 
     // keywords
     If, Else, 
     While, For,
     True, False,
-    And, Or,
     Null, 
     Return, 
     Function,
-    Print,  
+    Let,  
 
     Eof 
 };
