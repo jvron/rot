@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -62,11 +63,11 @@ bool Lexer::match(char expected) {
     if (is_end()) {
         return false;
     }
-    if(source[current_idx] !=  expected) {
+    if(source[current_idx] != expected) {
         return false;
     }
-    advance();
 
+    advance();
     return false;
 }
 
@@ -182,7 +183,17 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
             case '/':
                 if (match('/')) {
                     while (peek() != '\n' && !is_end()) {
-                        current_idx++; // ignore till end of the comment
+                        advance(); // ignore till end of the comment
+                    }   
+                }
+                else if (match('*')) {
+                    bool closing = peek() == '*' && peek_next() == '/';
+                    while (!closing && !is_end()) {
+                        advance();
+                    }
+                    if (closing) {
+                        advance();
+                        advance();
                     }
                 }
                 else {
