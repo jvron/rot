@@ -168,6 +168,16 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
             case '>':
                 add_token(match('=') ? TokenType::GreaterEqual : TokenType::Greater);
                 break;
+            case '&':
+                if (match('&')) {
+                    add_token(TokenType::LogicalAnd);
+                }
+                break;
+            case '|':
+                if (match('|')) {
+                    add_token(TokenType::LogicalOr);
+                }
+                break;
 
             case '/':
                 if (match('/')) {
@@ -207,6 +217,6 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
                 }
         }
     }
-
+    tokens.emplace_back(TokenType::Eof, "", line);
     return Result<std::vector<Token>>::success(tokens);
 }
