@@ -188,14 +188,24 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
                     }   
                 }
                 else if (match('*')) {
-                    bool closing = peek() == '*' && peek_next() == '/';
-                    while (!closing && !is_end()) {
+                    
+                    auto is_closing = [this](){
+                        return peek() == '*' && peek_next() == '/';
+                    };
+
+                    while (!is_closing() && !is_end()) {
+                        if (peek() == '\n') {
+                            line++;
+                        }
                         advance();
                     }
-                    if (closing) {
-                        advance();
-                        advance();
+                    if (!is_closing()) {
+                        std::string msg =  "line " + std::to_string(line) + ": Unterminated comment block.";
+                        return Result<std::vector<Token>>::failure(msg);
                     }
+                    // consume trailing "*/"
+                    advance();
+                    advance(); 
                 }
                 else {
                     add_token(TokenType::Slash);
@@ -204,7 +214,7 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
                 
             case '"': 
                 if (!scan_string()) {
-                    std::string msg =  "At line " + std::to_string(line) + ": Unterminated string.";
+                    std::string msg =  "line " + std::to_string(line) + ": Unterminated string.";
                     return Result<std::vector<Token>>::failure(msg);
                 }
                 break;
