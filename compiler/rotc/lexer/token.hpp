@@ -7,7 +7,7 @@ enum class TokenType {
     // punctuation
     LeftParen, RightParen,
     LeftBrace, RightBrace,
-    Comma, Dot, SemiColon,
+    Comma, Dot, SemiColon, Colon,
 
     // operators 
     Plus, Minus, Star, Slash,

@@ -157,6 +157,7 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
             case '+': add_token(TokenType::Plus); break;
             case '*': add_token(TokenType::Star); break;
             case ';': add_token(TokenType::SemiColon); break;
+            case ':': add_token(TokenType::Colon); break;
 
             case '!':
                 add_token(match('=') ? TokenType::BangEqual : TokenType::Bang);
@@ -188,7 +189,7 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
                     }   
                 }
                 else if (match('*')) {
-                    
+
                     auto is_closing = [this](){
                         return peek() == '*' && peek_next() == '/';
                     };
