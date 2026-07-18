@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <iostream>
 #include <string>
 #include <unordered_map>
@@ -218,6 +219,21 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
                     std::string msg =  "line " + std::to_string(line) + ": Unterminated string.";
                     return Result<std::vector<Token>>::failure(msg);
                 }
+                break;
+            case '\'':
+                if (is_end()) {
+                    std::string msg =  "line " + std::to_string(line) + ": Missing terminating ' character.";
+                    return Result<std::vector<Token>>::failure(msg);
+                }
+                advance(); // consume character
+
+                if (peek() != '\'') {
+                    std::string msg =  "line " + std::to_string(line) + ": Missing terminating ' character.";
+                    return Result<std::vector<Token>>::failure(msg);                
+                }
+
+                advance(); // consume trailing ' 
+                add_token(TokenType::Character);
                 break;
 
             case '\n': line++; break;
