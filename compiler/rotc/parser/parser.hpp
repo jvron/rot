@@ -20,9 +20,10 @@ private:
     bool is_end();
     void advance();
 
-    Expr primary();
     Expr expression();
-    Expr addition();
+    Expr additive();
+    Expr multiplicative();
+    Expr primary();
 
 public:
     Parser(const std::vector<Token>& tokens) : tokens(tokens) {};

@@ -21,7 +21,6 @@ const Token& Parser::peek() {
 }
 
 Expr Parser::primary() {
-    // primary = NUMBER
 
     if (peek().type == TokenType::Integer) {
 
@@ -37,19 +36,64 @@ Expr Parser::primary() {
 
         return expr;
     }
+
+    if (peek().type == TokenType::LeftParen) {
+
+        advance(); // consume '('
+        
+        Expr inner = expression();
+
+        GroupingExpr groupingExpr;
+        groupingExpr.expr = std::make_unique<Expr>(std::move(inner));
+
+        if (peek().type == TokenType::RightParen) {
+            advance(); // consume ')'
+        }
+
+        Expr expr;
+        expr.node = std::move(groupingExpr);
+
+        return expr;
+    }
+
     return {};
 }
 
-Expr Parser::addition() {
+Expr Parser::multiplicative() {
 
     Expr left = primary();
 
-    while (peek().type == TokenType::Plus) {
+    while (peek().type == TokenType::Star || peek().type == TokenType::Slash) {
 
         Token op = peek();
-        advance(); // consume +
+        advance(); // consume operator
 
         Expr right = primary();
+
+        BinaryExpr binaryExpr;
+        binaryExpr.left = std::make_unique<Expr>(std::move(left));
+        binaryExpr.op = op;
+        binaryExpr.right = std::make_unique<Expr>(std::move(right));
+
+        Expr expr;
+        expr.node = std::move(binaryExpr);
+        
+        left = std::move(expr); // grow the tree
+    }
+
+    return left;
+}
+
+Expr Parser::additive() {
+
+    Expr left = multiplicative();
+
+    while (peek().type == TokenType::Plus || peek().type == TokenType::Minus) {
+
+        Token op = peek();
+        advance(); // consume operator
+
+        Expr right = multiplicative();
 
         BinaryExpr binaryExpr;
         binaryExpr.left = std::make_unique<Expr>(std::move(left));
@@ -68,15 +112,17 @@ Expr Parser::addition() {
 Expr Parser::expression() {
 
 /*
-    expression = addition;
+    expression = additive ;
 
-    addition = primary, {+, primary};
+    additive = multiplicative, { ("+" | "-"), multiplicative };
 
-    primary = NUMBER;
+    multiplicative = primary, { ("*" | "/"), primary };
+
+    primary = NUMBER | "(" expression ")" ;
 
 */
 
-    return addition();
+    return additive();
 }
 
 ExprTree Parser::parse_tokens() {
