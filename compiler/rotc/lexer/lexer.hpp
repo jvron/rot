@@ -10,7 +10,7 @@
 class Lexer {
 
 private:
-    std::string source;
+    const std::string& source;
     std::vector<Token> tokens;
 
     uint32_t start_idx {};
@@ -32,7 +32,7 @@ private:
     void add_token(TokenType type);
 
 public:
-    Lexer(std::string& src) : source(std::move(src)) {}; 
+    Lexer(const std::string& src) : source(src) {}; 
 
     Result<std::vector<Token>> scan_tokens();
 };
