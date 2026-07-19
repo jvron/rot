@@ -26,6 +26,8 @@ private:
     bool is_comparison(const Token& token);
 
     Result<Expr> parse_expression();
+    Result<Expr> parse_logical_or();    
+    Result<Expr> parse_logical_and();
     Result<Expr> parse_equality();
     Result<Expr> parse_comparison();
     Result<Expr> parse_additive();

@@ -262,12 +262,84 @@ Result<Expr> Parser::parse_equality() {
     return Result<Expr>::success(std::move(left.value));
 }
 
+Result<Expr> Parser::parse_logical_and() {
+
+    Result<Expr> left = parse_equality();
+
+    if (!left) {
+        return left;
+    }
+
+    while (check(TokenType::LogicalAnd)) {
+
+        Token op = peek();
+        advance();
+
+        Result<Expr> right = parse_equality();
+
+        if (!right) {
+            return right;
+        }
+
+        BinaryExpr binaryExpr;
+        binaryExpr.left = std::make_unique<Expr>(std::move(left.value));
+        binaryExpr.op = op;
+        binaryExpr.right = std::make_unique<Expr>(std::move(right.value));
+
+        Expr expr;
+        expr.node = std::move(binaryExpr);
+
+        left.value = std::move(expr);
+    }
+
+    return Result<Expr>::success(std::move(left.value));
+
+}
+
+Result<Expr> Parser::parse_logical_or() {
+
+    Result<Expr> left = parse_logical_and();
+
+    if (!left) {
+        return left;
+    }
+
+    while (check(TokenType::LogicalOr)) {
+
+        Token op = peek();
+        advance();
+
+        Result<Expr> right = parse_logical_and();
+
+        if (!right) {
+            return right;
+        }
+
+        BinaryExpr binaryExpr;
+        binaryExpr.left = std::make_unique<Expr>(std::move(left.value));
+        binaryExpr.op = op;
+        binaryExpr.right = std::make_unique<Expr>(std::move(right.value));
+
+        Expr expr;
+        expr.node = std::move(binaryExpr);
+
+        left.value = std::move(expr);
+    }
+
+    return Result<Expr>::success(std::move(left.value));
+
+}
+
 Result<Expr> Parser::parse_expression() {
 
 /*  
     increasing precedence downwards
 
-    expression = equality;
+    expression = logical_or;
+
+    logical_or = logical_and, { "||", logical_and };
+
+    logical_and = comparison, { "&&", comparison};
 
     equality = comparison, { ("==" | "!="), comparison };
 
@@ -284,8 +356,7 @@ Result<Expr> Parser::parse_expression() {
     literal = NUMBER | BOOLEAN 
 
 */
-
-    return parse_equality();
+    return parse_logical_or();
 }
 
 Result<ExprTree> Parser::parse_tokens() {
