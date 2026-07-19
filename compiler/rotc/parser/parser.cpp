@@ -23,7 +23,7 @@ const Token& Parser::peek() {
     return tokens[current_idx];
 }
 
-Result<Expr> Parser::primary() {
+Result<Expr> Parser::parse_primary() {
 
     if (peek().type == TokenType::Integer) {
 
@@ -44,7 +44,7 @@ Result<Expr> Parser::primary() {
 
         advance(); // consume '('
         
-        Result<Expr> inner = expression();
+        Result<Expr> inner = parse_expression();
 
         if (!inner) {
             return inner;
@@ -69,9 +69,9 @@ Result<Expr> Parser::primary() {
     return Result<Expr>::failure(Error(msg));
 }
 
-Result<Expr> Parser::multiplicative() {
+Result<Expr> Parser::parse_multiplicative() {
 
-    Result<Expr> left = primary();
+    Result<Expr> left = parse_primary();
 
     if (!left) {
         return left;
@@ -82,7 +82,7 @@ Result<Expr> Parser::multiplicative() {
         Token op = peek();
         advance(); // consume operator
 
-        Result<Expr> right = primary();
+        Result<Expr> right = parse_primary();
 
         if (!right) {
             return right;
@@ -102,9 +102,9 @@ Result<Expr> Parser::multiplicative() {
     return Result<Expr>::success(std::move(left.value));
 }
 
-Result<Expr> Parser::additive() {
+Result<Expr> Parser::parse_additive() {
 
-    Result<Expr> left = multiplicative();
+    Result<Expr> left = parse_multiplicative();
 
     if (!left) {
         return left;
@@ -115,7 +115,7 @@ Result<Expr> Parser::additive() {
         Token op = peek();
         advance(); // consume operator
 
-        Result<Expr> right = multiplicative();
+        Result<Expr> right = parse_multiplicative();
 
         if (!right) {
             return right;
@@ -135,7 +135,7 @@ Result<Expr> Parser::additive() {
     return Result<Expr>::success(std::move(left.value));
 }
 
-Result<Expr> Parser::expression() {
+Result<Expr> Parser::parse_expression() {
 
 /*
     expression = additive ;
@@ -148,14 +148,14 @@ Result<Expr> Parser::expression() {
 
 */
 
-    return additive();
+    return parse_additive();
 }
 
 Result<ExprTree> Parser::parse_tokens() {
 
     ExprTree exprTree;
 
-    Result<Expr> expr = expression();
+    Result<Expr> expr = parse_expression();
 
     if (!expr) {
         return Result<ExprTree>::failure(expr.error);
