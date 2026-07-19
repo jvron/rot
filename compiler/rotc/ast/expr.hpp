@@ -22,6 +22,10 @@ struct LiteralExpr {
     Token literal;
 };
 
+struct IdentifierExpr {
+    Token name;
+};
+
 struct GroupingExpr {
     std::unique_ptr<Expr> expr;
 };
@@ -29,6 +33,7 @@ struct GroupingExpr {
 struct Expr {
     std::variant<
         BinaryExpr, UnaryExpr, 
-        LiteralExpr, GroupingExpr
+        LiteralExpr, IdentifierExpr, 
+        GroupingExpr
         > node;
 };
