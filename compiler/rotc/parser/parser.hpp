@@ -23,8 +23,10 @@ private:
     bool check(TokenType expected);
 
     bool is_literal(const Token& token);
+    bool is_comparison(const Token& token);
 
     Result<Expr> parse_expression();
+    Result<Expr> parse_comparison();
     Result<Expr> parse_additive();
     Result<Expr> parse_multiplicative();
     Result<Expr> parse_unary();

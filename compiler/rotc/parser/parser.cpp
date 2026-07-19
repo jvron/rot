@@ -34,6 +34,14 @@ bool Parser::is_literal(const Token& token) {
             token.type == TokenType::False;
 }
 
+bool Parser::is_comparison(const Token& token) {
+
+    return  token.type == TokenType::Greater || 
+            token.type == TokenType::Less ||
+            token.type == TokenType::GreaterEqual ||
+            token.type == TokenType::LessEqual;
+}
+
 Result<Expr> Parser::parse_literal() {
 
     const Token& token = peek(); 
@@ -188,10 +196,45 @@ Result<Expr> Parser::parse_additive() {
     return Result<Expr>::success(std::move(left.value));
 }
 
+Result<Expr> Parser::parse_comparison() {
+
+    Result<Expr> left = parse_additive();
+
+    if (!left) {
+        return left;
+    }
+
+    while (is_comparison(peek())) {
+
+        Token op = peek();
+        advance();
+
+        Result<Expr> right = parse_additive();
+
+        if (!right) {
+            return right;
+        }
+
+        BinaryExpr binaryExpr;
+        binaryExpr.left = std::make_unique<Expr>(std::move(left.value));
+        binaryExpr.op = op;
+        binaryExpr.right = std::make_unique<Expr>(std::move(right.value));
+
+        Expr expr;
+        expr.node = std::move(binaryExpr);
+
+        left.value = std::move(expr);
+    }
+
+    return Result<Expr>::success(std::move(left.value));
+}
+
 Result<Expr> Parser::parse_expression() {
 
 /*
     expression = additive ;
+
+    comparison = additive, { ( "<" | "<=" | ">" | ">=" ), additive};
 
     additive = multiplicative, { ("+" | "-"), multiplicative };
 
@@ -205,7 +248,7 @@ Result<Expr> Parser::parse_expression() {
 
 */
 
-    return parse_additive();
+    return parse_comparison();
 }
 
 Result<ExprTree> Parser::parse_tokens() {
