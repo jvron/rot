@@ -20,6 +20,7 @@ private:
     const Token& peek();
     bool is_end();
     void advance();
+    bool check(TokenType expected);
 
     bool is_literal(const Token& token);
 

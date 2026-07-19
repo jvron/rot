@@ -23,6 +23,10 @@ const Token& Parser::peek() {
     return tokens[current_idx];
 }
 
+bool Parser::check(TokenType expected) {
+    return peek().type == expected;
+}
+
 bool Parser::is_literal(const Token& token) {
 
     return  token.type == TokenType::Integer || 
@@ -47,12 +51,10 @@ Result<Expr> Parser::parse_literal() {
 
 Result<Expr> Parser::parse_primary() {
 
-    const Token& token = peek();
-
-    if (is_literal(token)) {
+    if (is_literal(peek())) {
         return parse_literal();
     }
-    else if (token.type == TokenType::LeftParen) {
+    else if (check(TokenType::LeftParen)) {
 
         advance(); // consume '('
         
@@ -77,10 +79,10 @@ Result<Expr> Parser::parse_primary() {
 
         return Result<Expr>::success(std::move(expr));
     }
-    else if (token.type == TokenType::Identifier) {
+    else if (check(TokenType::Identifier)) {
         
         IdentifierExpr identifierExpr;
-        identifierExpr.name = token;
+        identifierExpr.name = peek();
 
         advance(); // consume identifier
 
@@ -102,7 +104,7 @@ Result<Expr> Parser::parse_multiplicative() {
         return left;
     }
 
-    while (peek().type == TokenType::Star || peek().type == TokenType::Slash) {
+    while (check(TokenType::Star) || check(TokenType::Slash)) {
 
         Token op = peek();
         advance(); // consume operator
@@ -135,7 +137,7 @@ Result<Expr> Parser::parse_additive() {
         return left;
     }
 
-    while (peek().type == TokenType::Plus || peek().type == TokenType::Minus) {
+    while (check(TokenType::Plus) ||check(TokenType::Minus)) {
 
         Token op = peek();
         advance(); // consume operator
@@ -169,7 +171,9 @@ Result<Expr> Parser::parse_expression() {
 
     multiplicative = primary, { ("*" | "/"), primary };
 
-    primary = NUMBER | IDENTIFIER | BOOLEAN |  "(" expression ")" ;
+    primary = literal | IDENTIFIER |  "(" expression ")" ;
+
+    literal = NUMBER | BOOLEAN 
 
 */
 
