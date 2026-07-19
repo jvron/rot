@@ -30,6 +30,9 @@ bool Parser::check(TokenType expected) {
 bool Parser::is_literal(const Token& token) {
 
     return  token.type == TokenType::Integer || 
+            token.type == TokenType::Float ||
+            token.type == TokenType::String ||
+            token.type == TokenType::Character ||
             token.type == TokenType::True  ||
             token.type == TokenType::False;
 }
@@ -41,7 +44,6 @@ bool Parser::is_comparison(const Token& token) {
             token.type == TokenType::GreaterEqual ||
             token.type == TokenType::LessEqual;
 }
-
 
 Expr Parser::create_binary(Expr left, const Token& op, Expr right) {
 
@@ -317,7 +319,7 @@ Result<Expr> Parser::parse_expression() {
 
     primary = literal | IDENTIFIER |  "(" expression ")" ;
 
-    literal = NUMBER | BOOLEAN 
+    literal = INTEGER | FLOAT | BOOLEAN | STRING | CHARACTER 
 
 */
     return parse_logical_or();
