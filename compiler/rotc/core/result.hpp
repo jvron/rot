@@ -12,15 +12,16 @@ public:
     T value {};
     Error error;
 
+    Result<T>() = default;
     Result<T>(T value) : succeeded(true), value(std::move(value)) {}
     Result<T>(Error error) : succeeded(false), error(std::move(error)) {}
 
     static Result<T> success(T value) {
-        return Result<T>(value);
+        return Result<T>(std::move(value));
     }
 
     static Result<T> failure(Error error) {
-        return Result<T>(error);
+        return Result<T>(std::move(error));
     }
 
     // allow Result to be used in boolean contexts (if, !, &&, ||)
