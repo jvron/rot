@@ -148,10 +148,10 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
         advance();
 
         switch (c) {
-            case '(': add_token(TokenType::LeftBrace); break;
-            case ')': add_token(TokenType::RightBrace); break;
-            case '{': add_token(TokenType::LeftParen); break;
-            case '}': add_token(TokenType::RightParen); break;
+            case '(': add_token(TokenType::LeftParen); break;
+            case ')': add_token(TokenType::RightParen); break;
+            case '{': add_token(TokenType::LeftBrace); break;
+            case '}': add_token(TokenType::RightBrace); break;
             case ',': add_token(TokenType::Comma); break;
             case '.': add_token(TokenType::Dot); break;
             case '-': add_token(TokenType::Minus); break;
@@ -256,6 +256,6 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
                 }
         }
     }
-    tokens.emplace_back(TokenType::Eof, "", line);
+    tokens.emplace_back(TokenType::Eof, "eof", line);
     return Result<std::vector<Token>>::success(tokens);
 }
