@@ -40,7 +40,7 @@ Result<Expr> Parser::primary() {
         return Result<Expr>::success(std::move(expr));
     }
 
-    if (peek().type == TokenType::LeftParen) {
+    if (peek().type == TokenType::LeftBrace) {
 
         advance(); // consume '('
         
@@ -53,7 +53,7 @@ Result<Expr> Parser::primary() {
         GroupingExpr groupingExpr;
         groupingExpr.expr = std::make_unique<Expr>(std::move(inner.value));
 
-        if (peek().type != TokenType::RightParen) {
+        if (peek().type != TokenType::RightBrace) {
             std::string msg = "line: " + std::to_string(peek().line) + " Expected ')' after expression."; 
             return Result<Expr>::failure(Error(msg));
         }
