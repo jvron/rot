@@ -25,22 +25,21 @@ const Token& Parser::peek() {
 
 Result<Expr> Parser::parse_primary() {
 
-    if (peek().type == TokenType::Integer) {
+    const Token& token = peek();
 
-        Token numberToken = peek();
-
-        advance(); // consume literal 
+    if (token.type == TokenType::Integer) {
 
         LiteralExpr literalExpr;
-        literalExpr.literal = numberToken;
+        literalExpr.literal = token;
+                
+        advance(); // consume Integer
 
         Expr expr;
         expr.node = std::move(literalExpr);
 
         return Result<Expr>::success(std::move(expr));
     }
-
-    if (peek().type == TokenType::LeftBrace) {
+    else if (token.type == TokenType::LeftBrace) {
 
         advance(); // consume '('
         
@@ -65,7 +64,32 @@ Result<Expr> Parser::parse_primary() {
 
         return Result<Expr>::success(std::move(expr));
     }
-    std::string msg = "line: " + std::to_string(peek().line) + " Expected number or '(', found: " + peek().lexeme; 
+    else if (token.type == TokenType::Identifier) {
+        
+        IdentifierExpr identifierExpr;
+        identifierExpr.name = token;
+
+        advance(); // consume identifier
+
+        Expr expr;
+        expr.node = std::move(identifierExpr);
+
+        return Result<Expr>::success(std::move(expr));
+    }
+    else if (token.type == TokenType::True || token.type == TokenType::False) {
+        
+        LiteralExpr literalExpr;
+        literalExpr.literal = token;
+
+        advance();
+
+        Expr expr;
+        expr.node = std::move(literalExpr);
+
+        return Result<Expr>::success(std::move(expr));
+    }
+
+    std::string msg = "line: " + std::to_string(peek().line) + " Expected expression, found: " + peek().lexeme; 
     return Result<Expr>::failure(Error(msg));
 }
 
@@ -144,7 +168,7 @@ Result<Expr> Parser::parse_expression() {
 
     multiplicative = primary, { ("*" | "/"), primary };
 
-    primary = NUMBER | "(" expression ")" ;
+    primary = NUMBER | IDENTIFIER | BOOLEAN |  "(" expression ")" ;
 
 */
 
