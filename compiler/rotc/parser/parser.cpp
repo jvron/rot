@@ -23,21 +23,34 @@ const Token& Parser::peek() {
     return tokens[current_idx];
 }
 
+bool Parser::is_literal(const Token& token) {
+
+    return  token.type == TokenType::Integer || 
+            token.type == TokenType::True  ||
+            token.type == TokenType::False;
+}
+
+Result<Expr> Parser::parse_literal() {
+
+    const Token& token = peek(); 
+
+    LiteralExpr literalExpr;
+    literalExpr.literal = token;
+            
+    advance(); // consume literal
+
+    Expr expr;
+    expr.node = std::move(literalExpr);
+
+    return Result<Expr>::success(std::move(expr));
+}
+
 Result<Expr> Parser::parse_primary() {
 
     const Token& token = peek();
 
-    if (token.type == TokenType::Integer) {
-
-        LiteralExpr literalExpr;
-        literalExpr.literal = token;
-                
-        advance(); // consume Integer
-
-        Expr expr;
-        expr.node = std::move(literalExpr);
-
-        return Result<Expr>::success(std::move(expr));
+    if (is_literal(token)) {
+        return parse_literal();
     }
     else if (token.type == TokenType::LeftBrace) {
 
@@ -73,18 +86,6 @@ Result<Expr> Parser::parse_primary() {
 
         Expr expr;
         expr.node = std::move(identifierExpr);
-
-        return Result<Expr>::success(std::move(expr));
-    }
-    else if (token.type == TokenType::True || token.type == TokenType::False) {
-        
-        LiteralExpr literalExpr;
-        literalExpr.literal = token;
-
-        advance();
-
-        Expr expr;
-        expr.node = std::move(literalExpr);
 
         return Result<Expr>::success(std::move(expr));
     }

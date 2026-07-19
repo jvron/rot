@@ -21,10 +21,13 @@ private:
     bool is_end();
     void advance();
 
+    bool is_literal(const Token& token);
+
     Result<Expr> parse_expression();
     Result<Expr> parse_additive();
     Result<Expr> parse_multiplicative();
     Result<Expr> parse_primary();
+    Result<Expr> parse_literal();
 
 public:
     Parser(const std::vector<Token>& tokens) : tokens(tokens) {};
