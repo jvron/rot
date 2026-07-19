@@ -229,10 +229,47 @@ Result<Expr> Parser::parse_comparison() {
     return Result<Expr>::success(std::move(left.value));
 }
 
+Result<Expr> Parser::parse_equality() {
+
+    Result<Expr> left = parse_comparison();
+
+    if (!left) {
+        return left;
+    }
+
+    while (check(TokenType::EqualEqual) || check(TokenType::BangEqual)) {
+
+        Token op = peek();
+        advance();
+
+        Result<Expr> right = parse_comparison();
+
+        if (!right) {
+            return right;
+        }
+
+        BinaryExpr binaryExpr;
+        binaryExpr.left = std::make_unique<Expr>(std::move(left.value));
+        binaryExpr.op = op;
+        binaryExpr.right = std::make_unique<Expr>(std::move(right.value));
+
+        Expr expr;
+        expr.node = std::move(binaryExpr);
+
+        left.value = std::move(expr);
+    }
+
+    return Result<Expr>::success(std::move(left.value));
+}
+
 Result<Expr> Parser::parse_expression() {
 
-/*
-    expression = additive ;
+/*  
+    increasing precedence downwards
+
+    expression = equality;
+
+    equality = comparison, { ("==" | "!="), comparison };
 
     comparison = additive, { ( "<" | "<=" | ">" | ">=" ), additive};
 
@@ -248,7 +285,7 @@ Result<Expr> Parser::parse_expression() {
 
 */
 
-    return parse_comparison();
+    return parse_equality();
 }
 
 Result<ExprTree> Parser::parse_tokens() {
