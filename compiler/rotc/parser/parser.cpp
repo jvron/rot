@@ -96,9 +96,35 @@ Result<Expr> Parser::parse_primary() {
     return Result<Expr>::failure(Error(msg));
 }
 
+Result<Expr> Parser::parse_unary() {
+
+    if (check(TokenType::Bang) || check(TokenType::Minus)) {
+          
+        UnaryExpr unaryExpr;
+        unaryExpr.op = peek();
+
+        advance(); // consume op
+
+        Result<Expr> right = parse_unary();
+
+        if (!right) {
+            return right;
+        }
+
+        unaryExpr.right = std::make_unique<Expr>(std::move(right.value));
+
+        Expr expr;
+        expr.node = std::move(unaryExpr);
+
+        return Result<Expr>::success(std::move(expr));
+    }
+
+    return parse_primary();
+}
+
 Result<Expr> Parser::parse_multiplicative() {
 
-    Result<Expr> left = parse_primary();
+    Result<Expr> left = parse_unary();
 
     if (!left) {
         return left;
@@ -109,7 +135,7 @@ Result<Expr> Parser::parse_multiplicative() {
         Token op = peek();
         advance(); // consume operator
 
-        Result<Expr> right = parse_primary();
+        Result<Expr> right = parse_unary();
 
         if (!right) {
             return right;
@@ -169,7 +195,9 @@ Result<Expr> Parser::parse_expression() {
 
     additive = multiplicative, { ("+" | "-"), multiplicative };
 
-    multiplicative = primary, { ("*" | "/"), primary };
+    multiplicative = unary, { ("*" | "/"), unary};
+
+    unary = ("!" | "-") unary | primary;
 
     primary = literal | IDENTIFIER |  "(" expression ")" ;
 

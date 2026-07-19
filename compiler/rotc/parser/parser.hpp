@@ -27,6 +27,7 @@ private:
     Result<Expr> parse_expression();
     Result<Expr> parse_additive();
     Result<Expr> parse_multiplicative();
+    Result<Expr> parse_unary();
     Result<Expr> parse_primary();
     Result<Expr> parse_literal();
 
