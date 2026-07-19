@@ -25,6 +25,8 @@ private:
     bool is_literal(const Token& token);
     bool is_comparison(const Token& token);
 
+    Expr create_binary(Expr left, const Token& op, Expr right);
+
     Result<Expr> parse_expression();
     Result<Expr> parse_logical_or();    
     Result<Expr> parse_logical_and();

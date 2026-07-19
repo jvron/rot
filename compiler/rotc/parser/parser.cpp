@@ -42,6 +42,20 @@ bool Parser::is_comparison(const Token& token) {
             token.type == TokenType::LessEqual;
 }
 
+
+Expr Parser::create_binary(Expr left, const Token& op, Expr right) {
+
+    BinaryExpr binaryExpr;
+    binaryExpr.left = std::make_unique<Expr>(std::move(left));
+    binaryExpr.op = op;
+    binaryExpr.right = std::make_unique<Expr>(std::move(right));
+
+    Expr expr;
+    expr.node = std::move(binaryExpr);
+
+    return expr;
+}
+
 Result<Expr> Parser::parse_literal() {
 
     const Token& token = peek(); 
@@ -140,7 +154,7 @@ Result<Expr> Parser::parse_multiplicative() {
 
     while (check(TokenType::Star) || check(TokenType::Slash)) {
 
-        Token op = peek();
+        const Token& op = peek();
         advance(); // consume operator
 
         Result<Expr> right = parse_unary();
@@ -148,16 +162,8 @@ Result<Expr> Parser::parse_multiplicative() {
         if (!right) {
             return right;
         }
-
-        BinaryExpr binaryExpr;
-        binaryExpr.left = std::make_unique<Expr>(std::move(left.value));
-        binaryExpr.op = op;
-        binaryExpr.right = std::make_unique<Expr>(std::move(right.value));
-
-        Expr expr;
-        expr.node = std::move(binaryExpr);
         
-        left.value = std::move(expr); // grow the tree
+        left.value = create_binary(std::move(left.value), op, std::move(right.value));; // grow the tree
     }
 
     return Result<Expr>::success(std::move(left.value));
@@ -173,7 +179,7 @@ Result<Expr> Parser::parse_additive() {
 
     while (check(TokenType::Plus) ||check(TokenType::Minus)) {
 
-        Token op = peek();
+        const Token& op = peek();
         advance(); // consume operator
 
         Result<Expr> right = parse_multiplicative();
@@ -182,15 +188,7 @@ Result<Expr> Parser::parse_additive() {
             return right;
         }
 
-        BinaryExpr binaryExpr;
-        binaryExpr.left = std::make_unique<Expr>(std::move(left.value));
-        binaryExpr.op = op;
-        binaryExpr.right = std::make_unique<Expr>(std::move(right.value));
-
-        Expr expr;
-        expr.node = std::move(binaryExpr); // move because binaryExpr contains unique pointers (it cannot be copied)
-        
-        left.value = std::move(expr); // grow the tree
+        left.value = create_binary(std::move(left.value), op, std::move(right.value));
     }
 
     return Result<Expr>::success(std::move(left.value));
@@ -206,7 +204,7 @@ Result<Expr> Parser::parse_comparison() {
 
     while (is_comparison(peek())) {
 
-        Token op = peek();
+        const Token& op = peek();
         advance();
 
         Result<Expr> right = parse_additive();
@@ -215,15 +213,7 @@ Result<Expr> Parser::parse_comparison() {
             return right;
         }
 
-        BinaryExpr binaryExpr;
-        binaryExpr.left = std::make_unique<Expr>(std::move(left.value));
-        binaryExpr.op = op;
-        binaryExpr.right = std::make_unique<Expr>(std::move(right.value));
-
-        Expr expr;
-        expr.node = std::move(binaryExpr);
-
-        left.value = std::move(expr);
+        left.value = create_binary(std::move(left.value), op, std::move(right.value));
     }
 
     return Result<Expr>::success(std::move(left.value));
@@ -239,7 +229,7 @@ Result<Expr> Parser::parse_equality() {
 
     while (check(TokenType::EqualEqual) || check(TokenType::BangEqual)) {
 
-        Token op = peek();
+        const Token& op = peek();
         advance();
 
         Result<Expr> right = parse_comparison();
@@ -248,15 +238,7 @@ Result<Expr> Parser::parse_equality() {
             return right;
         }
 
-        BinaryExpr binaryExpr;
-        binaryExpr.left = std::make_unique<Expr>(std::move(left.value));
-        binaryExpr.op = op;
-        binaryExpr.right = std::make_unique<Expr>(std::move(right.value));
-
-        Expr expr;
-        expr.node = std::move(binaryExpr);
-
-        left.value = std::move(expr);
+        left.value = create_binary(std::move(left.value), op, std::move(right.value));
     }
 
     return Result<Expr>::success(std::move(left.value));
@@ -272,7 +254,7 @@ Result<Expr> Parser::parse_logical_and() {
 
     while (check(TokenType::LogicalAnd)) {
 
-        Token op = peek();
+        const Token& op = peek();
         advance();
 
         Result<Expr> right = parse_equality();
@@ -281,19 +263,10 @@ Result<Expr> Parser::parse_logical_and() {
             return right;
         }
 
-        BinaryExpr binaryExpr;
-        binaryExpr.left = std::make_unique<Expr>(std::move(left.value));
-        binaryExpr.op = op;
-        binaryExpr.right = std::make_unique<Expr>(std::move(right.value));
-
-        Expr expr;
-        expr.node = std::move(binaryExpr);
-
-        left.value = std::move(expr);
+        left.value = create_binary(std::move(left.value), op, std::move(right.value));
     }
 
     return Result<Expr>::success(std::move(left.value));
-
 }
 
 Result<Expr> Parser::parse_logical_or() {
@@ -306,7 +279,7 @@ Result<Expr> Parser::parse_logical_or() {
 
     while (check(TokenType::LogicalOr)) {
 
-        Token op = peek();
+        const Token& op = peek();
         advance();
 
         Result<Expr> right = parse_logical_and();
@@ -315,19 +288,10 @@ Result<Expr> Parser::parse_logical_or() {
             return right;
         }
 
-        BinaryExpr binaryExpr;
-        binaryExpr.left = std::make_unique<Expr>(std::move(left.value));
-        binaryExpr.op = op;
-        binaryExpr.right = std::make_unique<Expr>(std::move(right.value));
-
-        Expr expr;
-        expr.node = std::move(binaryExpr);
-
-        left.value = std::move(expr);
+        left.value = create_binary(std::move(left.value), op, std::move(right.value));
     }
 
     return Result<Expr>::success(std::move(left.value));
-
 }
 
 Result<Expr> Parser::parse_expression() {
