@@ -5,6 +5,7 @@
 
 #include "ast/expr.hpp"
 #include "lexer/token.hpp"
+#include "core/result.hpp"
 
 struct ExprTree {
     Expr root;
@@ -20,14 +21,14 @@ private:
     bool is_end();
     void advance();
 
-    Expr expression();
-    Expr additive();
-    Expr multiplicative();
-    Expr primary();
+    Result<Expr> expression();
+    Result<Expr> additive();
+    Result<Expr> multiplicative();
+    Result<Expr> primary();
 
 public:
     Parser(const std::vector<Token>& tokens) : tokens(tokens) {};
 
-    ExprTree parse_tokens();
+    Result<ExprTree> parse_tokens();
 
 };
