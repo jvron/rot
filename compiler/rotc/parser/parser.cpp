@@ -61,26 +61,37 @@ bool Parser::check(TokenType expected) {
 
 bool Parser::is_literal(const Token& token) {
 
-    return  token.type == TokenType::Integer || 
-            token.type == TokenType::Float ||
-            token.type == TokenType::String ||
-            token.type == TokenType::Character ||
-            token.type == TokenType::True  ||
-            token.type == TokenType::False;
+    switch (token.type) {
+        case TokenType::Integer:
+        case TokenType::Float:
+        case TokenType::String:
+        case TokenType::Character:
+        case TokenType::True:
+        case TokenType::False:
+            return true;
+
+        default:
+            return false;
+    }
 }
 
 bool Parser::is_comparison(const Token& token) {
 
-    return  token.type == TokenType::Greater || 
-            token.type == TokenType::Less ||
-            token.type == TokenType::GreaterEqual ||
-            token.type == TokenType::LessEqual;
+    switch (token.type) {
+        case TokenType::Greater:
+        case TokenType::Less:
+        case TokenType::GreaterEqual:
+        case TokenType::LessEqual:
+            return true;
+
+        default:
+            return false;
+    }
 }
 
 bool Parser::is_expression_start(const Token& token) {
 
     switch (token.type) {
-
         case TokenType::Integer:
         case TokenType::Float:
         case TokenType::String:
@@ -144,7 +155,7 @@ Result<Expr> Parser::parse_primary() {
         groupingExpr.expr = std::make_unique<Expr>(std::move(inner.value));
 
         if (peek().type != TokenType::RightParen) {
-            std::string msg = "line: " + std::to_string(peek().line) + " Expected ')' after expression."; 
+            std::string msg = "line " + std::to_string(peek().line) + ": Expected ')' after expression."; 
             return Result<Expr>::failure(Error(msg));
         }
 
@@ -168,7 +179,7 @@ Result<Expr> Parser::parse_primary() {
         return Result<Expr>::success(std::move(expr));
     }
 
-    std::string msg = "line: " + std::to_string(peek().line) + " Expected expression, found: " + peek().lexeme; 
+    std::string msg = "line " + std::to_string(peek().line) + ": Expected expression, found: " + peek().lexeme; 
     return Result<Expr>::failure(Error(msg));
 }
 
@@ -360,7 +371,7 @@ Result<Stmt> Parser::parse_expression_statement() {
     }
 
     if (!check(TokenType::SemiColon)) {
-        std::string msg = "line:" + std::to_string(peek().line) + " Expected ';' after expression, found '" + peek().lexeme + "'."; 
+        std::string msg = "line " + std::to_string(peek().line) + ": Expected ';' after expression, found '" + peek().lexeme + "'."; 
         return Result<Stmt>::failure(Error(msg));
     }
     advance(); // consume ';'
@@ -379,14 +390,14 @@ Result<Stmt> Parser::parse_var_declaration() {
     advance(); // consume 'let'
 
     if (!check(TokenType::Identifier)) {
-        std::string msg = "line:" + std::to_string(peek().line) + " Expected identifier after 'let', found '" + peek().lexeme + "'."; 
+        std::string msg = "line " + std::to_string(peek().line) + ": Expected identifier after 'let', found '" + peek().lexeme + "'."; 
         return Result<Stmt>::failure(Error(msg));
     }
     Token var_name = peek(); 
     advance(); // consume identifier
 
     if (!check(TokenType::Equal)) {
-        std::string msg = "line:" + std::to_string(peek().line) + " Expected '=' after variable name, found '" + peek().lexeme + "'."; 
+        std::string msg = "line " + std::to_string(peek().line) + ": Expected '=' after variable name, found '" + peek().lexeme + "'."; 
         return Result<Stmt>::failure(Error(msg));
     }
     advance(); // consume '='
@@ -398,7 +409,7 @@ Result<Stmt> Parser::parse_var_declaration() {
     }
 
     if (!check(TokenType::SemiColon)) {
-        std::string msg = "line:" + std::to_string(peek().line) + " Expected ';' after expression, found '" + peek().lexeme + "'."; 
+        std::string msg = "line " + std::to_string(peek().line) + ": Expected ';' after expression, found '" + peek().lexeme + "'."; 
         return Result<Stmt>::failure(Error(msg));
     }
     advance(); // consume ';'
@@ -421,7 +432,7 @@ Result<Stmt> Parser::parse_statement() {
         return parse_expression_statement();
     }
 
-    std::string msg = "line: " + std::to_string(peek().line) +" Expected statement, found: " + peek().lexeme;
+    std::string msg = "line " + std::to_string(peek().line) +": Expected statement, found: " + peek().lexeme;
     return Result<Stmt>::failure(Error(msg));
 }
 
