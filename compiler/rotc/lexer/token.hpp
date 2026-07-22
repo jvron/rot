@@ -1,6 +1,7 @@
 #pragma once 
 
-#include <string>
+#include <cstdint>
+#include <sys/types.h>
 
 enum class TokenType {
     
@@ -32,12 +33,24 @@ enum class TokenType {
     Eof 
 };
 
+struct SourceLocation {
+    uint32_t line {};
+    uint32_t column {};
+    uint32_t offset {}; // absolute position of the character 
+
+    SourceLocation() = default;
+    SourceLocation(uint32_t ln, uint32_t col, uint32_t offset) : line(ln), column(col), offset(offset) {}
+};
+
+struct SourceSpan {
+    SourceLocation start;
+    SourceLocation end;
+};
+
 struct Token {
     TokenType type;
-    std::string lexeme; 
-    int line {};
+    SourceSpan span;
 
-    Token() {};
-    Token(TokenType token_type, std::string token_lexeme, int token_line)
-        : type(token_type), lexeme(std::move(token_lexeme)), line(token_line) {};
+    Token() = default;
+    Token(TokenType type, SourceSpan& span) : type(type), span(span) {}
 };

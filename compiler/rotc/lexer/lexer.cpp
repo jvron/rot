@@ -1,5 +1,3 @@
-#include <cstdio>
-#include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -40,6 +38,7 @@ bool Lexer::is_alphanumeric(char value) {
 }
 
 void Lexer::advance() {
+    column++;
     current_idx++;
 }
 
@@ -79,6 +78,7 @@ bool Lexer::scan_string() {
 
         if (peek() == '\n') {
             line++;
+            column = 1;
         }
         advance();
     }
@@ -114,6 +114,7 @@ bool Lexer::scan_number() {
 }
 
 void Lexer::scan_identifier() {
+
     while (!is_end() && is_alphanumeric(peek())) {
         advance();
     }
@@ -128,14 +129,16 @@ void Lexer::scan_identifier() {
     else {
         add_token(TokenType::Identifier);
     }
-    
 }
 
 void Lexer::add_token(TokenType type) {
     
-    std::string lexeme = source.substr(start_idx, current_idx - start_idx);
+    SourceSpan span = {
+        .start = SourceLocation(line, column, start_idx),
+        .end = SourceLocation(line, column, current_idx - start_idx),
+    };
 
-    tokens.emplace_back(type, lexeme, line);
+    tokens.emplace_back(type, span);
 }
 
 Result<std::vector<Token>> Lexer::scan_tokens() {
@@ -198,6 +201,7 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
                     while (!is_closing() && !is_end()) {
                         if (peek() == '\n') {
                             line++;
+                            column = 1;
                         }
                         advance();
                     }
@@ -236,7 +240,10 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
                 add_token(TokenType::Character);
                 break;
 
-            case '\n': line++; break;
+            case '\n': 
+                line++;
+                column = 1; 
+                break;
 
             case ' ':
             case '\r':
@@ -251,11 +258,17 @@ Result<std::vector<Token>> Lexer::scan_tokens() {
                     scan_identifier();
                 }
                 else {
-                    std::string msg = "At line " + std::to_string(line) + ": Unexpected character.";
+                    std::string msg = "line " + std::to_string(line) + ": Unexpected character.";
                     return Result<std::vector<Token>>::failure(Error(msg));
                 }
         }
     }
-    tokens.emplace_back(TokenType::Eof, "eof", line);
+
+    SourceSpan span = {
+        .start = SourceLocation(line, column, source.size()),
+        .end = SourceLocation(line, column, source.size()),
+    };
+    tokens.emplace_back(TokenType::Eof, span);
+
     return Result<std::vector<Token>>::success(tokens);
 }

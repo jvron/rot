@@ -16,6 +16,7 @@ private:
     uint32_t start_idx {};
     uint32_t current_idx {};
     int line {1};
+    int column {1};
 
     bool is_end();
     bool is_digit(char value);
