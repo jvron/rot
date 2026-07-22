@@ -20,6 +20,14 @@ struct VarDeclarationStmt {
     VarDeclarationStmt(Token name, Expr init) : var_name(std::move(name)), initializer(std::make_unique<Expr>(std::move(init))) {}
 };
 
+struct AssignmentStmt {
+    Token var_name;
+    std::unique_ptr<Expr> initializer;
+
+    AssignmentStmt() = default;
+    AssignmentStmt(Token name, Expr value) : var_name(std::move(name)), initializer(std::make_unique<Expr>(std::move(value))) {}
+};
+
 struct Stmt {
-    std::variant<ExprStmt, VarDeclarationStmt> node;
+    std::variant<ExprStmt, VarDeclarationStmt, AssignmentStmt> node;
 };
