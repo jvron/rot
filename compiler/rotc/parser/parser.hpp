@@ -3,13 +3,11 @@
 #include <cstdint>
 #include <vector>
 
+#include "ast/ast.hpp"
 #include "ast/expr.hpp"
 #include "lexer/token.hpp"
 #include "core/result.hpp"
-
-struct ExprTree {
-    Expr root;
-};
+#include "ast/stmt.hpp"
 
 class Parser {
 
@@ -24,9 +22,13 @@ private:
 
     bool is_literal(const Token& token);
     bool is_comparison(const Token& token);
+    bool is_expression_start(const Token& token);
 
     Expr create_binary(Expr left, const Token& op, Expr right);
 
+    Result<Stmt> parse_statement();
+    Result<Stmt> parse_var_declaration();
+    Result<Stmt> parse_expression_statement();
     Result<Expr> parse_expression();
     Result<Expr> parse_logical_or();    
     Result<Expr> parse_logical_and();
@@ -41,6 +43,6 @@ private:
 public:
     Parser(const std::vector<Token>& tokens) : tokens(tokens) {};
 
-    Result<ExprTree> parse_tokens();
+    Result<Program> parse_program();
 
 };

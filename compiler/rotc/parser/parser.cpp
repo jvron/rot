@@ -1,10 +1,42 @@
+/*  
+    program = { statement };
+
+    statement = variable_declaration | expression;
+
+    variable_declaration = "let", IDENTIFER, "=", expression, ";"
+
+    expression_statement = expression, ";";
+
+    expression = logical_or;
+
+    logical_or = logical_and, { "||", logical_and };
+
+    logical_and = comparison, { "&&", comparison};
+
+    equality = comparison, { ("==" | "!="), comparison };
+
+    comparison = additive, { ( "<" | "<=" | ">" | ">=" ), additive};
+
+    additive = multiplicative, { ("+" | "-"), multiplicative };
+
+    multiplicative = unary, { ("*" | "/"), unary};
+
+    unary = ("!" | "-") unary | primary;
+
+    primary = literal | IDENTIFIER |  "(" expression ")" ;
+
+    literal = INTEGER | FLOAT | BOOLEAN | STRING | CHARACTER 
+
+*/
 
 #include <memory>
 #include <string>
 #include <variant>
 
 #include "parser.hpp"
+#include "ast/ast.hpp"
 #include "ast/expr.hpp"
+#include "ast/stmt.hpp"
 #include "core/error.hpp"
 #include "core/result.hpp"
 #include "lexer/token.hpp"
@@ -43,6 +75,26 @@ bool Parser::is_comparison(const Token& token) {
             token.type == TokenType::Less ||
             token.type == TokenType::GreaterEqual ||
             token.type == TokenType::LessEqual;
+}
+
+bool Parser::is_expression_start(const Token& token) {
+
+    switch (token.type) {
+
+        case TokenType::Integer:
+        case TokenType::Float:
+        case TokenType::String:
+        case TokenType::Character:
+        case TokenType::True:
+        case TokenType::False:
+        case TokenType::Identifier:
+        case TokenType::LeftParen:
+        case TokenType::Minus:
+        case TokenType::Bang:
+            return true;
+        default:
+            return false;
+    }
 }
 
 Expr Parser::create_binary(Expr left, const Token& op, Expr right) {
@@ -297,48 +349,94 @@ Result<Expr> Parser::parse_logical_or() {
 }
 
 Result<Expr> Parser::parse_expression() {
-
-/*  
-    increasing precedence downwards
-
-    expression = logical_or;
-
-    logical_or = logical_and, { "||", logical_and };
-
-    logical_and = comparison, { "&&", comparison};
-
-    equality = comparison, { ("==" | "!="), comparison };
-
-    comparison = additive, { ( "<" | "<=" | ">" | ">=" ), additive};
-
-    additive = multiplicative, { ("+" | "-"), multiplicative };
-
-    multiplicative = unary, { ("*" | "/"), unary};
-
-    unary = ("!" | "-") unary | primary;
-
-    primary = literal | IDENTIFIER |  "(" expression ")" ;
-
-    literal = INTEGER | FLOAT | BOOLEAN | STRING | CHARACTER 
-
-*/
     return parse_logical_or();
 }
 
-Result<ExprTree> Parser::parse_tokens() {
+Result<Stmt> Parser::parse_expression_statement() {
+    Result<Expr> expression = parse_expression();
 
-    ExprTree exprTree;
-
-    Result<Expr> expr = parse_expression();
-
-    if (!expr) {
-        return Result<ExprTree>::failure(expr.error);
+    if (!expression) {
+        return Result<Stmt>::failure(expression.error);
     }
 
-    if (!is_end()) {
-        std::string msg = "line: " + std::to_string(peek().line) + " Unexpected token: "+ peek().lexeme ; 
-        return Result<ExprTree>::failure(Error(msg));
+    if (!check(TokenType::SemiColon)) {
+        std::string msg = "line:" + std::to_string(peek().line) + " Expected ';' after expression, found '" + peek().lexeme + "'."; 
+        return Result<Stmt>::failure(Error(msg));
     }
-    exprTree.root = std::move(expr.value);
-    return Result<ExprTree>::success(std::move(exprTree));
+    advance(); // consume ';'
+
+    ExprStmt expr_stmt(std::move(expression.value));
+
+    Stmt stmt = {
+        .node = std::move(expr_stmt)
+    };
+
+    return Result<Stmt>::success(std::move(stmt));
+}
+
+Result<Stmt> Parser::parse_var_declaration() {
+
+    advance(); // consume 'let'
+
+    if (!check(TokenType::Identifier)) {
+        std::string msg = "line:" + std::to_string(peek().line) + " Expected identifier after 'let', found '" + peek().lexeme + "'."; 
+        return Result<Stmt>::failure(Error(msg));
+    }
+    Token var_name = peek(); 
+    advance(); // consume identifier
+
+    if (!check(TokenType::Equal)) {
+        std::string msg = "line:" + std::to_string(peek().line) + " Expected '=' after variable name, found '" + peek().lexeme + "'."; 
+        return Result<Stmt>::failure(Error(msg));
+    }
+    advance(); // consume '='
+
+    Result<Expr> initializer = parse_expression();
+    
+    if (!initializer) {
+        return Result<Stmt>::failure(initializer.error);
+    }
+
+    if (!check(TokenType::SemiColon)) {
+        std::string msg = "line:" + std::to_string(peek().line) + " Expected ';' after expression, found '" + peek().lexeme + "'."; 
+        return Result<Stmt>::failure(Error(msg));
+    }
+    advance(); // consume ';'
+
+    VarDeclarationStmt var_decl_stmt(var_name, std::move(initializer.value));
+
+    Stmt stmt = {
+        .node = std::move(var_decl_stmt)
+    };
+    
+    return Result<Stmt>::success(std::move(stmt));
+}
+
+Result<Stmt> Parser::parse_statement() {
+
+    if (check(TokenType::Let)) {
+        return parse_var_declaration();
+    }
+    if (is_expression_start(peek())) {
+        return parse_expression_statement();
+    }
+
+    std::string msg = "line: " + std::to_string(peek().line) +" Expected statement, found: " + peek().lexeme;
+    return Result<Stmt>::failure(Error(msg));
+}
+
+Result<Program> Parser::parse_program() {
+
+    Program program;
+
+    while (!is_end()) {
+        Result<Stmt> statement = parse_statement();
+        
+        if (!statement) {
+            return Result<Program>::failure(statement.error);
+        }
+        program.statements.push_back(std::move(statement.value));
+    }
+
+    return Result<Program>::success(std::move(program));
 }
