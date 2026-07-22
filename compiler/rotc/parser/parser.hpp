@@ -1,6 +1,5 @@
 #pragma once
 
-#include <cstdint>
 #include <vector>
 
 #include "ast/ast.hpp"
@@ -16,9 +15,11 @@ private:
     uint32_t current_idx {};
 
     const Token& peek();
+    const Token& peek_next();
     bool is_end();
     void advance();
     bool check(TokenType expected);
+    bool check_next(TokenType expected);
 
     bool is_literal(const Token& token);
     bool is_comparison(const Token& token);
@@ -27,8 +28,10 @@ private:
     Expr create_binary(Expr left, const Token& op, Expr right);
 
     Result<Stmt> parse_statement();
+    Result<Stmt> parse_assignment();
     Result<Stmt> parse_var_declaration();
     Result<Stmt> parse_expression_statement();
+
     Result<Expr> parse_expression();
     Result<Expr> parse_logical_or();    
     Result<Expr> parse_logical_and();
@@ -44,5 +47,4 @@ public:
     Parser(const std::vector<Token>& tokens) : tokens(tokens) {};
 
     Result<Program> parse_program();
-
 };

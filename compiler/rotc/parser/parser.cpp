@@ -1,7 +1,9 @@
 /*  
     program = { statement };
 
-    statement = variable_declaration | expression;
+    statement = assignment_statement | variable_declaration | expression;
+
+    assignment_statement = IDENTIFER, "=", expression, ";"
 
     variable_declaration = "let", IDENTIFER, "=", expression, ";"
 
@@ -31,6 +33,7 @@
 
 #include <memory>
 #include <string>
+#include <utility>
 #include <variant>
 
 #include "parser.hpp"
@@ -55,8 +58,16 @@ const Token& Parser::peek() {
     return tokens[current_idx];
 }
 
+const Token& Parser::peek_next() {
+    return tokens[current_idx + 1];
+}
+
 bool Parser::check(TokenType expected) {
     return peek().type == expected;
+}
+
+bool Parser::check_next(TokenType expected) {
+    return peek_next().type == expected;
 }
 
 bool Parser::is_literal(const Token& token) {
@@ -423,15 +434,50 @@ Result<Stmt> Parser::parse_var_declaration() {
     return Result<Stmt>::success(std::move(stmt));
 }
 
+Result<Stmt> Parser::parse_assignment() {
+
+    Token var_name = peek();
+    advance();
+
+    if (!check(TokenType::Equal)) {
+        std::string msg = "line " + std::to_string(peek().line) + ": Expected '=' after variable name, found '" + peek().lexeme + "'."; 
+        return Result<Stmt>::failure(Error(msg));
+    }
+    advance();
+
+    Result<Expr> value = parse_expression();
+
+    if (!value) {
+        return Result<Stmt>::failure(value.error); 
+    }
+
+    if (!check(TokenType::SemiColon)) {
+        std::string msg = "line " + std::to_string(peek().line) + ": Expected ';' after expression, found '" + peek().lexeme + "'."; 
+        return Result<Stmt>::failure(Error(msg));
+    }
+    advance(); 
+
+    AssignmentStmt assignment_stmt(var_name, std::move(value.value));
+
+    Stmt stmt = {
+        .node = std::move(assignment_stmt)
+    };
+
+    return Result<Stmt>::success(std::move(stmt));
+}
+
 Result<Stmt> Parser::parse_statement() {
 
     if (check(TokenType::Let)) {
         return parse_var_declaration();
     }
+    if (check(TokenType::Identifier) && check_next(TokenType::Equal)) {
+        return parse_assignment();
+    }
     if (is_expression_start(peek())) {
         return parse_expression_statement();
     }
-
+    
     std::string msg = "line " + std::to_string(peek().line) +": Expected statement, found: " + peek().lexeme;
     return Result<Stmt>::failure(Error(msg));
 }
