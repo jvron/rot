@@ -135,7 +135,7 @@ void Lexer::add_token(TokenType type) {
     
     SourceSpan span = {
         .start = SourceLocation(line, column, start_idx),
-        .end = SourceLocation(line, column, current_idx - start_idx),
+        .end = SourceLocation(line, column, current_idx),
     };
 
     tokens.emplace_back(type, span);
