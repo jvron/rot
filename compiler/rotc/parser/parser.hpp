@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstdint>
 #include <vector>
 
 #include "ast/ast.hpp"
@@ -12,10 +13,12 @@ class Parser {
 
 private:
     const std::vector<Token>& tokens;
+    const std::string& source;
+
     uint32_t current_idx {};
 
-    const Token& peek();
-    const Token& peek_next();
+    Token peek();
+    Token peek_next();
     bool is_end();
     void advance();
     bool check(TokenType expected);
@@ -24,6 +27,9 @@ private:
     bool is_literal(const Token& token);
     bool is_comparison(const Token& token);
     bool is_expression_start(const Token& token);
+
+    std::string get_lexeme(const Token& token);
+    std::string line_number_str(const Token& token);
 
     Expr create_binary(Expr left, const Token& op, Expr right);
 
@@ -44,7 +50,7 @@ private:
     Result<Expr> parse_literal();
 
 public:
-    Parser(const std::vector<Token>& tokens) : tokens(tokens) {};
+    Parser(const std::vector<Token>& tokens, const std::string& source) : tokens(tokens), source(source) {};
 
     Result<Program> parse_program();
 };

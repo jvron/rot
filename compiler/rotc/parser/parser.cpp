@@ -54,11 +54,11 @@ void Parser::advance() {
     }
 }
 
-const Token& Parser::peek() {
+Token Parser::peek() {
     return tokens[current_idx];
 }
 
-const Token& Parser::peek_next() {
+Token Parser::peek_next() {
     return tokens[current_idx + 1];
 }
 
@@ -119,6 +119,14 @@ bool Parser::is_expression_start(const Token& token) {
     }
 }
 
+std::string Parser::get_lexeme(const Token& token) {
+    return source.substr(token.span.start.offset, token.span.end.offset - token.span.start.offset);
+}
+
+std::string Parser::line_number_str(const Token& token) {
+    return std::to_string(token.span.start.line);
+}
+
 Expr Parser::create_binary(Expr left, const Token& op, Expr right) {
 
     BinaryExpr binaryExpr;
@@ -134,7 +142,7 @@ Expr Parser::create_binary(Expr left, const Token& op, Expr right) {
 
 Result<Expr> Parser::parse_literal() {
 
-    const Token& token = peek(); 
+    Token token = peek(); 
 
     LiteralExpr literalExpr;
     literalExpr.literal = token;
@@ -166,10 +174,9 @@ Result<Expr> Parser::parse_primary() {
         groupingExpr.expr = std::make_unique<Expr>(std::move(inner.value));
 
         if (peek().type != TokenType::RightParen) {
-            std::string msg = "line " + std::to_string(peek().line) + ": Expected ')' after expression."; 
+            std::string msg = "line " + line_number_str(peek()) + ": Expected ')' after expression."; 
             return Result<Expr>::failure(Error(msg));
         }
-
         advance(); // consume ')'
 
         Expr expr;
@@ -190,7 +197,7 @@ Result<Expr> Parser::parse_primary() {
         return Result<Expr>::success(std::move(expr));
     }
 
-    std::string msg = "line " + std::to_string(peek().line) + ": Expected expression, found: " + peek().lexeme; 
+    std::string msg = "line " + line_number_str(peek()) + ": Expected expression, found: " + get_lexeme(peek()); 
     return Result<Expr>::failure(Error(msg));
 }
 
@@ -230,7 +237,7 @@ Result<Expr> Parser::parse_multiplicative() {
 
     while (check(TokenType::Star) || check(TokenType::Slash)) {
 
-        const Token& op = peek();
+        Token op = peek();
         advance(); // consume operator
 
         Result<Expr> right = parse_unary();
@@ -255,7 +262,7 @@ Result<Expr> Parser::parse_additive() {
 
     while (check(TokenType::Plus) ||check(TokenType::Minus)) {
 
-        const Token& op = peek();
+        Token op = peek();
         advance(); // consume operator
 
         Result<Expr> right = parse_multiplicative();
@@ -280,7 +287,7 @@ Result<Expr> Parser::parse_comparison() {
 
     while (is_comparison(peek())) {
 
-        const Token& op = peek();
+        Token op = peek();
         advance();
 
         Result<Expr> right = parse_additive();
@@ -305,7 +312,7 @@ Result<Expr> Parser::parse_equality() {
 
     while (check(TokenType::EqualEqual) || check(TokenType::BangEqual)) {
 
-        const Token& op = peek();
+        Token op = peek();
         advance();
 
         Result<Expr> right = parse_comparison();
@@ -382,7 +389,7 @@ Result<Stmt> Parser::parse_expression_statement() {
     }
 
     if (!check(TokenType::SemiColon)) {
-        std::string msg = "line " + std::to_string(peek().line) + ": Expected ';' after expression, found '" + peek().lexeme + "'."; 
+        std::string msg = "line " + line_number_str(peek()) + ": Expected ';' after expression, found '" + get_lexeme(peek()) + "'."; 
         return Result<Stmt>::failure(Error(msg));
     }
     advance(); // consume ';'
@@ -401,14 +408,14 @@ Result<Stmt> Parser::parse_var_declaration() {
     advance(); // consume 'let'
 
     if (!check(TokenType::Identifier)) {
-        std::string msg = "line " + std::to_string(peek().line) + ": Expected identifier after 'let', found '" + peek().lexeme + "'."; 
+        std::string msg = "line " + line_number_str(peek()) + ": Expected identifier after 'let', found '" + get_lexeme(peek()) + "'."; 
         return Result<Stmt>::failure(Error(msg));
     }
     Token var_name = peek(); 
     advance(); // consume identifier
 
     if (!check(TokenType::Equal)) {
-        std::string msg = "line " + std::to_string(peek().line) + ": Expected '=' after variable name, found '" + peek().lexeme + "'."; 
+        std::string msg = "line " + line_number_str(peek()) + ": Expected '=' after variable name, found '" + get_lexeme(peek()) + "'."; 
         return Result<Stmt>::failure(Error(msg));
     }
     advance(); // consume '='
@@ -420,7 +427,7 @@ Result<Stmt> Parser::parse_var_declaration() {
     }
 
     if (!check(TokenType::SemiColon)) {
-        std::string msg = "line " + std::to_string(peek().line) + ": Expected ';' after expression, found '" + peek().lexeme + "'."; 
+        std::string msg = "line " + line_number_str(peek()) + ": Expected ';' after expression, found '" + get_lexeme(peek()) + "'."; 
         return Result<Stmt>::failure(Error(msg));
     }
     advance(); // consume ';'
@@ -440,7 +447,7 @@ Result<Stmt> Parser::parse_assignment() {
     advance();
 
     if (!check(TokenType::Equal)) {
-        std::string msg = "line " + std::to_string(peek().line) + ": Expected '=' after variable name, found '" + peek().lexeme + "'."; 
+        std::string msg = "line " + line_number_str(peek()) + ": Expected '=' after variable name, found '" + get_lexeme(peek()) + "'."; 
         return Result<Stmt>::failure(Error(msg));
     }
     advance();
@@ -452,7 +459,7 @@ Result<Stmt> Parser::parse_assignment() {
     }
 
     if (!check(TokenType::SemiColon)) {
-        std::string msg = "line " + std::to_string(peek().line) + ": Expected ';' after expression, found '" + peek().lexeme + "'."; 
+        std::string msg = "line " + line_number_str(peek()) + ": Expected ';' after expression, found '" + get_lexeme(peek()) + "'."; 
         return Result<Stmt>::failure(Error(msg));
     }
     advance(); 
@@ -478,7 +485,7 @@ Result<Stmt> Parser::parse_statement() {
         return parse_expression_statement();
     }
     
-    std::string msg = "line " + std::to_string(peek().line) +": Expected statement, found: " + peek().lexeme;
+    std::string msg = "line " + line_number_str(peek()) +": Expected statement, found: " + get_lexeme(peek());
     return Result<Stmt>::failure(Error(msg));
 }
 
